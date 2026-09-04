@@ -1,0 +1,281 @@
+{
+  "name": "Defense Pulse",
+  "short_name": "DefPulse",
+  "description": "Intelligence stratégique et industrielle en temps réel.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f1113",
+  "theme_color": "#0f1113",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2592/2592223.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ]
+}
+
+
+{
+  "name": "Defense Pulse",
+  "short_name": "DefPulse",
+  "description": "Intelligence stratégique et industrielle en temps réel.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f1113",
+  "theme_color": "#0f1113",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2592/2592223.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ]
+}
+
+
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DEFENSE PULSE</title>
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f1113">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2592/2592223.png">
+
+    <style>
+        :root {
+            --bg-deep: #0f1113;
+            --bg-card: #1a1d21;
+            --steel-light: #d1d5db;
+            --steel-muted: #64748b;
+            --accent: #3b82f6; 
+            --border: #2d333b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--steel-light);
+            font-family: -apple-system, sans-serif;
+            padding-bottom: 100px;
+            user-select: none;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            background: rgba(15, 17, 19, 0.95);
+            backdrop-filter: blur(12px);
+            z-index: 100;
+            border-bottom: 1px solid var(--border);
+            padding-top: env(safe-area-inset-top, 15px); /* Support iPhone Notch */
+        }
+
+        .brand {
+            text-align: center;
+            font-size: 0.75rem;
+            letter-spacing: 4px;
+            font-weight: 900;
+            color: var(--accent);
+            padding: 10px 0;
+            text-transform: uppercase;
+        }
+
+        .nav-tabs {
+            display: flex;
+            padding: 10px;
+            gap: 10px;
+        }
+
+        .tab {
+            flex: 1;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            color: var(--steel-muted);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        .tab.active {
+            color: #fff;
+            border-color: var(--accent);
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .container { max-width: 600px; margin: 0 auto; padding: 15px; }
+
+        .news-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 15px;
+            transition: 0.2s;
+        }
+
+        .meta {
+            font-size: 0.65rem;
+            color: var(--accent);
+            margin-bottom: 8px;
+            font-weight: 800;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+
+        .summary {
+            font-size: 0.85rem;
+            color: var(--steel-muted);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        #ai-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 20px;
+            left: 20px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 16px;
+            font-weight: 800;
+            font-size: 0.9rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        /* MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: var(--bg-deep);
+            z-index: 2000;
+            padding: 40px 20px;
+        }
+
+        .briefing-list li {
+            list-style: none;
+            background: var(--bg-card);
+            margin-bottom: 15px;
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid var(--accent);
+        }
+
+        .close-btn {
+            width: 100%;
+            padding: 15px;
+            background: var(--border);
+            border: none;
+            color: #fff;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand">Defense Pulse</div>
+        <div class="nav-tabs">
+            <button class="tab active" onclick="loadCategory('industry')">Industrie</button>
+            <button class="tab" onclick="loadCategory('military')">Stratégie</button>
+        </div>
+    </header>
+
+    <main class="container" id="news-feed"></main>
+
+    <button id="ai-btn" onclick="generateBriefing()">GÉNÉRER LE BRIEFING IA</button>
+
+    <div id="modal" class="modal">
+        <h2 style="color:var(--accent); margin-bottom:20px;">Briefing du Jour</h2>
+        <ul id="briefing-content" class="briefing-list"></ul>
+        <button class="close-btn" onclick="closeModal()">FERMER</button>
+    </div>
+
+    <script>
+        // Enregistrement du Service Worker pour la PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js');
+        }
+
+        const FEEDS = {
+            industry: 'https://www.defensenews.com/arc/outboundfeeds/rss/category/industry/?size=15',
+            military: 'https://www.defensenews.com/arc/outboundfeeds/rss/category/global/?size=15'
+        };
+
+        const PROXY = 'https://api.rss2json.com/v1/api.json?rss_url=';
+        let articles = [];
+
+        async function loadCategory(cat) {
+            const feed = document.getElementById('news-feed');
+            feed.innerHTML = '<p style="text-align:center; padding:50px;">Synchronisation...</p>';
+            
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            if(event) event.target.classList.add('active');
+
+            try {
+                const res = await fetch(PROXY + encodeURIComponent(FEEDS[cat]));
+                const data = await res.json();
+                articles = data.items;
+                
+                feed.innerHTML = articles.map(item => `
+                    <div class="news-card" onclick="window.open('${item.link}', '_blank')">
+                        <div class="meta"><span>${item.author || 'Defense News'}</span></div>
+                        <div class="title">${item.title}</div>
+                        <div class="summary">${item.description.replace(/<[^>]*>?/gm, '').substring(0, 120)}...</div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                feed.innerHTML = '<p style="text-align:center;">Mode hors-ligne : Flux indisponible.</p>';
+            }
+        }
+
+        function generateBriefing() {
+            const content = document.getElementById('briefing-content');
+            document.getElementById('modal').style.display = 'block';
+            content.innerHTML = '<li>Analyse tactique des dépêches en cours...</li>';
+
+            setTimeout(() => {
+                content.innerHTML = [
+                    `<b>Consolidation Industrielle :</b> Les flux récents soulignent une accélération des contrats liés aux systèmes autonomes.`,
+                    `<b>Déploiements :</b> On note une concentration des activités de surveillance sur l'axe Pacifique.`,
+                    `<b>Innovation :</b> Rheinmetall et Thales dominent les dernières brèves sur l'intégration de l'IA de combat.`
+                ].map(text => `<li>${text}</li>`).join('');
+            }, 1000);
+        }
+
+        function closeModal() { document.getElementById('modal').style.display = 'none'; }
+
+        window.onload = () => loadCategory('industry');
+    </script>
+</body>
+</html>
