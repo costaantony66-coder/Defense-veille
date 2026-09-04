@@ -421,14 +421,14 @@ const FEEDS = {
     url: 'https://www.forcesoperations.com/feed/',
     color: 'var(--amber)' 
   },
-  rdn: { 
-    label: 'Revue Défense Nationale', 
-    url: 'https://www.defnat.fr/feed/',  // Institution de référence
+  bruxelles: { 
+    label: 'Bruxelles2 (Défense EU)', 
+    url: 'https://www.bruxelles2.eu/feed/',
     color: 'var(--green)' 
   },
-  opinion: { 
-    label: 'L\'Opinion (Défense)', 
-    url: 'https://www.lopinion.fr/feed/',
+  defense_aero: { 
+    label: 'Défense-Aérospatiale', 
+    url: 'https://www.defense-aerospace.com/rss/defense-aerospace-news.xml',
     color: 'var(--purple)' 
   },
 };
@@ -544,15 +544,39 @@ function toggleFavorite(item){
    ========================================================================== */
 async function fetchFeed(sourceKey){
   try{
-    const res = await fetch(PROXY + encodeURIComponent(FEEDS[sourceKey].url));
+    const url = FEEDS[sourceKey].url;
+    const res = await fetch(PROXY + encodeURIComponent(url));
     const data = await res.json();
-    if(data.status !== 'ok') throw new Error('feed error');
-    return data.items.map(item => ({
-      ...item,
-      sourceKey,
-      snippet: htmlToSnippet(item.description),
-    }));
-  }catch(e){ return []; }
+    
+    if(data.status !== 'ok' || !data.contents){
+      console.warn(`❌ Flux ${sourceKey} inaccessible:`, data);
+      return [];
+    }
+    
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(data.contents, 'text/xml');
+    
+    if(doc.documentElement.nodeName === 'parsererror'){
+      console.warn(`❌ XML mal formé pour ${sourceKey}`);
+      return [];
+    }
+    
+    const items = [];
+    doc.querySelectorAll('item').forEach(item => {
+      items.push({
+        title: item.querySelector('title')?.textContent || '',
+        description: item.querySelector('description')?.textContent || '',
+        link: item.querySelector('link')?.textContent || '',
+        pubDate: item.querySelector('pubDate')?.textContent || new Date(),
+        sourceKey,
+        snippet: htmlToSnippet(item.querySelector('description')?.textContent || ''),
+      });
+    });
+    return items;
+  }catch(e){ 
+    console.error(`⚠️ Erreur ${sourceKey}:`, e.message); 
+    return []; 
+  }
 }
 
 async function loadCategory(cat){
