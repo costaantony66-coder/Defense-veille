@@ -1,21 +1,34 @@
-const CACHE_NAME = 'def-pulse-v1';
-const ASSETS = [
-  './',
-  './index.html',
-  'https://api.rss2json.com/v1/api.json'
-];
+// Service worker minimal — met en cache la coquille de l'application
+// pour un démarrage instantané et un mode hors-ligne dégradé.
+// Les flux RSS (API rss2json) ne sont volontairement PAS mis en cache :
+// il s'agit de données vivantes, toujours récupérées depuis le réseau.
 
-// Installation : Mise en cache du squelette de l'app
-self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
+const CACHE_NAME = 'defense-pulse-v1';
+const APP_SHELL = ['./index.html', './manifest.json'];
+
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL))
   );
+  self.skipWaiting();
 });
 
-// Stratégie : Network First, fallback on Cache
-// On essaye d'abord d'avoir les dernières infos, sinon on affiche le cache
-self.addEventListener('fetch', (e) => {
-  e.respondWith(
-    fetch(e.request).catch(() => caches.match(e.request))
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+    )
+  );
+  self.clients.claim();
+});
+
+self.addEventListener('fetch', event => {
+  const url = new URL(event.request.url);
+
+  // Ne jamais intercepter les appels API (flux RSS toujours frais)
+  if (url.hostname.includes('rss2json.com')) return;
+
+  event.respondWith(
+    caches.match(event.request).then(cached => cached || fetch(event.request))
   );
 });
