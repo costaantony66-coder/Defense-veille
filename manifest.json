@@ -4,8 +4,8 @@
   "description": "Intelligence stratégique et industrielle en temps réel.",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#0f1113",
-  "theme_color": "#0f1113",
+  "background_color": "#08090b",
+  "theme_color": "#08090b",
   "orientation": "portrait",
   "icons": [
     {
