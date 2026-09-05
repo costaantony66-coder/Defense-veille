@@ -5,7 +5,6 @@ from datetime import datetime
 from time import mktime
 from email.utils import parsedate_tz
 
-# Configuration des sources
 FEEDS = [
     {"name": "Opex360", "url": "http://www.opex360.com/feed/"},
     {"name": "Forces Opérations", "url": "https://www.forcesoperations.com/feed/"},
@@ -16,7 +15,6 @@ DATA_FILE = "news.json"
 MAX_ARTICLES = 50
 
 def parse_entry_date(entry):
-    """Convertit proprement la date d'un flux RSS en objet datetime, avec fallback."""
     for field in ('published_parsed', 'updated_parsed'):
         time_struct = entry.get(field)
         if time_struct:
@@ -25,7 +23,6 @@ def parse_entry_date(entry):
             except Exception:
                 pass
     
-    # Fallback sur les chaînes de caractères si les objets parsed n'existent pas
     date_str = entry.get('published', entry.get('updated', ''))
     if date_str:
         try:
@@ -43,7 +40,9 @@ def fetch_news():
     if os.path.exists(DATA_FILE):
         with open(DATA_FILE, 'r', encoding='utf-8') as f:
             try:
-                old_articles = json.load(f)
+                data = json.load(f)
+                # Gère le cas où le JSON est une liste ou un dictionnaire structuré
+                old_articles = data.get("articles", []) if isinstance(data, dict) else data
             except:
                 old_articles = []
     else:
@@ -55,8 +54,6 @@ def fetch_news():
         
         for entry in feed.entries:
             dt = parse_entry_date(entry)
-            
-            # Nettoyage HTML sommaire du résumé
             summary_raw = entry.get('summary', '')
             clean_summary = summary_raw.split('<')[0][:200] + "..." if summary_raw else ""
             
@@ -64,26 +61,27 @@ def fetch_news():
                 "title": entry.get('title', 'Sans titre'),
                 "summary": clean_summary,
                 "link": entry.get('link', '#'),
-                "date": dt.isoformat(), # Stockage propre au format ISO
+                "date": dt.isoformat(),
                 "source": source['name'],
                 "category": determine_category(entry.get('title', '') + " " + summary_raw)
             }
             all_articles.append(article)
 
-    # Fusion avec l'ancien, dédoublonnage par lien
     combined = {a['link']: a for a in (old_articles + all_articles)}.values()
-    
-    # Tri précis par date décroissante basé sur le datetime ISO
     sorted_articles = sorted(combined, key=lambda x: x['date'], reverse=True)
 
-    # Sauvegarde des N derniers articles
+    # On structure le JSON avec une métadonnée de dernière mise à jour pour forcer le changement Git
+    output_data = {
+        "last_updated": datetime.now().isoformat(),
+        "articles": list(sorted_articles)[:MAX_ARTICLES]
+    }
+
     with open(DATA_FILE, 'w', encoding='utf-8') as f:
-        json.dump(list(sorted_articles)[:MAX_ARTICLES], f, ensure_ascii=False, indent=4)
+        json.dump(output_data, f, ensure_ascii=False, indent=4)
     
-    print(f"Mise à jour terminée : {len(sorted_articles[:MAX_ARTICLES])} articles sauvegardés.")
+    print(f"Mise à jour terminée : {len(output_data['articles'])} articles sauvegardés.")
 
 def determine_category(text):
-    """Logique simple de catégorisation par mots-clés"""
     text = text.lower()
     if any(word in text for word in ["avion", "rafale", "air", "f-35", "chasseur", "drone"]): return "Air"
     if any(word in text for word in ["char", "blindé", "vbcid", "terre", "militaire", "arme", "soldat"]): return "Terre"
