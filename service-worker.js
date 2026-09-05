@@ -1,34 +1,88 @@
-// Service worker minimal — met en cache la coquille de l'application
-// pour un démarrage instantané et un mode hors-ligne dégradé.
-// Les flux RSS (API rss2json) ne sont volontairement PAS mis en cache :
-// il s'agit de données vivantes, toujours récupérées depuis le réseau.
+// Configuration & État
+let allArticles = [];
+const newsContainer = document.getElementById('news-feed');
+const searchInput = document.getElementById('search-input'); // À adapter selon ton ID
+const categoryFilters = document.querySelectorAll('.filter-btn'); // À adapter
 
-const CACHE_NAME = 'defense-pulse-v1';
-const APP_SHELL = ['./index.html', './manifest.json'];
+/**
+ * Charge les news depuis le JSON généré
+ */
+async function fetchNews() {
+    try {
+        const response = await fetch('news.json');
+        allArticles = await response.json();
+        renderArticles(allArticles);
+    } catch (error) {
+        console.error("Erreur lors du chargement des dépêches:", error);
+        newsContainer.innerHTML = "<p>Erreur de chargement des actualités.</p>";
+    }
+}
 
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL))
-  );
-  self.skipWaiting();
-});
+/**
+ * Affiche les articles dans le DOM
+ */
+function renderArticles(articles) {
+    const favorites = JSON.parse(localStorage.getItem('defense_pulse_favs') || '[]');
+    
+    newsContainer.innerHTML = articles.map(article => {
+        const isFav = favorites.includes(article.link);
+        const dateFormatted = new Date(article.date).toLocaleDateString('fr-FR', {
+            day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
+        });
 
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
-    )
-  );
-  self.clients.claim();
-});
+        return `
+            <article class="news-card" data-category="${article.category}">
+                <div class="card-header">
+                    <span class="source-badge">${article.source}</span>
+                    <span class="date">${dateFormatted}</span>
+                </div>
+                <h3>${article.title}</h3>
+                <p>${article.summary}</p>
+                <div class="card-footer">
+                    <a href="${article.link}" target="_blank" rel="noopener">Lire la suite</a>
+                    <button onclick="toggleFavorite('${article.link}')" class="fav-btn ${isFav ? 'active' : ''}">
+                        ${isFav ? '★' : '☆'}
+                    </button>
+                </div>
+            </article>
+        `;
+    }).join('');
+}
 
-self.addEventListener('fetch', event => {
-  const url = new URL(event.request.url);
+/**
+ * Système de favoris
+ */
+window.toggleFavorite = (link) => {
+    let favorites = JSON.parse(localStorage.getItem('defense_pulse_favs') || '[]');
+    if (favorites.includes(link)) {
+        favorites = favorites.filter(fav => fav !== link);
+    } else {
+        favorites.push(link);
+    }
+    localStorage.setItem('defense_pulse_favs', JSON.stringify(favorites));
+    renderArticles(applyFilters()); // Rafraîchir l'affichage
+};
 
-  // Ne jamais intercepter les appels API (flux RSS toujours frais)
-  if (url.hostname.includes('rss2json.com')) return;
+/**
+ * Filtrage et Recherche
+ */
+function applyFilters() {
+    const searchTerm = searchInput.value.toLowerCase();
+    // Tu peux ajouter ici la logique de filtre par catégorie
+    return allArticles.filter(article => {
+        const matchesSearch = article.title.toLowerCase().includes(searchTerm) || 
+                              article.summary.toLowerCase().includes(searchTerm);
+        return matchesSearch;
+    });
+}
 
-  event.respondWith(
-    caches.match(event.request).then(cached => cached || fetch(event.request))
-  );
-});
+// Event Listeners
+if(searchInput) {
+    searchInput.addEventListener('input', () => {
+        const filtered = applyFilters();
+        renderArticles(filtered);
+    });
+}
+
+// Initialisation
+document.addEventListener('DOMContentLoaded', fetchNews);
