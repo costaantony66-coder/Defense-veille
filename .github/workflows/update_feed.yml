@@ -1,15 +1,15 @@
-name: Update Defense Pulse Feed
+Name: Update Defense Pulse Feed
 
 on:
   schedule:
     - cron: '0 */4 * * *' # Toutes les 4 heures
-  workflow_dispatch: # Permet de lancer manuellement depuis l'onglet Actions
+  workflow_dispatch: # Permet de lancer manuellement
 
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Important pour permettre le push
+      contents: write
 
     steps:
       - name: Checkout repository
@@ -23,10 +23,10 @@ jobs:
       - name: Install dependencies
         run: |
           pip install feedparser
-          
+
       - name: Run update script
-        run: python ./update_feed.py
-        
+        working-directory: .
+        run: python update_feed.py
 
       - name: Commit and push if changes
         run: |
@@ -34,3 +34,4 @@ jobs:
           git config --local user.name "github-actions[bot]"
           git add news.json
           git diff --quiet && git diff --staged --quiet || (git commit -m "Update news feed: $(date +'%Y-%m-%d %H:%M')" && git push)
+          
