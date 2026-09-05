@@ -7,7 +7,7 @@ from datetime import datetime
 FEEDS = [
     {"name": "Opex360", "url": "http://www.opex360.com/feed/"},
     {"name": "Forces Opérations", "url": "https://www.forcesoperations.com/feed/"},
-    {"name": "Défense Gouv", "url": "https://www.defense.gouv.fr/rss/actualites"}
+    {"name": "Géopolitique & Défense", "url": "https://www.lemonde.fr/defense/rss_full.xml"},
 ]
 
 DATA_FILE = "news.json"
