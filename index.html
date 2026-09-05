@@ -527,23 +527,31 @@ function toggleFavorite(item){
    ========================================================================== */
 async function fetchFeed(sourceKey){
   try{
-    const res = await fetch('news.json?' + new Date().getTime());
+    const res = await fetch('news.json?t=' + Date.now());
+    if (!res.ok) throw new Error('Erreur HTTP');
     const data = await res.json();
     const articles = Array.isArray(data) ? data : (data.articles || []);
     
-    // Si on demande "tous", on renvoie tout, sinon on filtre par la source correspondante
     return articles
-      .filter(item => sourceKey === 'all' || item.sourceKey === sourceKey || item.source === FEEDS[sourceKey]?.label)
+      .filter(item => {
+        if (sourceKey === 'all') return true;
+        const targetLabel = FEEDS[sourceKey]?.label?.toLowerCase() || '';
+        const itemSource = (item.source || item.sourceKey || '').toLowerCase();
+        return itemSource === sourceKey.toLowerCase() || itemSource.includes(targetLabel);
+      })
       .map(item => ({
-        title: item.title,
-        link: item.link,
-        pubDate: item.date || item.pubDate,
+        title: item.title || 'Sans titre',
+        link: item.link || '#',
+        pubDate: item.date || item.pubDate || new Date().toISOString(),
         sourceKey: sourceKey,
-        description: item.summary,
-        snippet: item.summary,
+        description: item.summary || item.description || '',
+        snippet: item.summary || item.snippet || '',
       }));
-  }catch(e){ return []; }
-}
+  }catch(e){
+    console.error("Erreur de chargement du flux:", e);
+    return [];
+  }
+       }
 
 async function loadCategory(cat){
   state.category = cat;
